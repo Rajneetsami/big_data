@@ -13,19 +13,50 @@
 					"description": "Import auto sales data from datalake storage"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "auto_sales_data_2020",
+						"type": "DatasetReference"
+					},
+					"name": "AutoSalesData2020"
+				},
+				{
+					"dataset": {
+						"referenceName": "auto_sales_data_2019",
+						"type": "DatasetReference"
+					},
+					"name": "AutoSalesData2019"
+				},
+				{
+					"dataset": {
+						"referenceName": "auto_sales_data_2018",
+						"type": "DatasetReference"
+					},
+					"name": "AutoSalesData2018"
+				}
+			],
 			"transformations": [
 				{
 					"name": "SortByOrderNumber"
-				},
-				{
-					"name": "Aggregation"
 				},
 				{
 					"name": "ConcatContactName"
 				},
 				{
 					"name": "DeleteColumns"
+				},
+				{
+					"name": "SalesData2018",
+					"description": "Filtering rows using expressions on columns 'ORDERDATE' == 2018"
+				},
+				{
+					"name": "SalesData2019",
+					"description": "Filtering rows using expressions on columns 'ORDERDATE' == 2019"
+				},
+				{
+					"name": "SalesData2020",
+					"description": "Filtering rows using expressions on columns 'ORDERDATE' == 2020"
 				}
 			],
 			"scriptLines": [
@@ -55,10 +86,6 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> SalesDataSourceCSV",
 				"SalesDataSourceCSV sort(asc(ORDERNUMBER, true)) ~> SortByOrderNumber",
-				"DeleteColumns aggregate(groupBy(ORDERNUMBER),",
-				"     TotalSales = round(sum(SALES), 2),",
-				"          TotalQuantityOrdered = sum(QUANTITYORDERED),",
-				"          TotalNumberOfOrderLines = count(ORDERLINENUMBER)) ~> Aggregation",
 				"SortByOrderNumber derive(CONTACTPERSON = concat(CONTACTFIRSTNAME, ' ', CONTACTLASTNAME)) ~> ConcatContactName",
 				"ConcatContactName select(mapColumn(",
 				"          ORDERNUMBER,",
@@ -82,7 +109,35 @@
 				"          CONTACTPERSON",
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> DeleteColumns"
+				"     skipDuplicateMapOutputs: true) ~> DeleteColumns",
+				"SalesData2019 filter(year(ORDERDATE) == 2018",
+				"",
+				") ~> SalesData2018",
+				"SalesData2020 filter(year(ORDERDATE) == 2019",
+				") ~> SalesData2019",
+				"DeleteColumns filter(year(ORDERDATE) == 2020",
+				") ~> SalesData2020",
+				"SalesData2020 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> AutoSalesData2020",
+				"SalesData2019 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> AutoSalesData2019",
+				"SalesData2018 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> AutoSalesData2018"
 			]
 		}
 	}

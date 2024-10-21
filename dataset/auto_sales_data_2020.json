@@ -1,0 +1,21 @@
+{
+	"name": "auto_sales_data_2020",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Ls_adls_auto_sales_sink",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
