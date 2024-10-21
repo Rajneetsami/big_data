@@ -1,0 +1,89 @@
+{
+	"name": "dataflow_structured_data",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "salesdata",
+						"type": "DatasetReference"
+					},
+					"name": "SalesDataSourceCSV",
+					"description": "Import auto sales data from datalake storage"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "SortByOrderNumber"
+				},
+				{
+					"name": "Aggregation"
+				},
+				{
+					"name": "ConcatContactName"
+				},
+				{
+					"name": "DeleteColumns"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          ORDERNUMBER as integer,",
+				"          QUANTITYORDERED as integer,",
+				"          PRICEEACH as double,",
+				"          ORDERLINENUMBER as integer,",
+				"          SALES as double,",
+				"          ORDERDATE as date 'dd/MM/yyyy',",
+				"          DAYS_SINCE_LASTORDER as integer,",
+				"          STATUS as string,",
+				"          PRODUCTLINE as string,",
+				"          MSRP as integer,",
+				"          PRODUCTCODE as string,",
+				"          CUSTOMERNAME as string,",
+				"          PHONE as string,",
+				"          ADDRESSLINE1 as string,",
+				"          CITY as string,",
+				"          POSTALCODE as string,",
+				"          COUNTRY as string,",
+				"          CONTACTLASTNAME as string,",
+				"          CONTACTFIRSTNAME as string,",
+				"          DEALSIZE as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> SalesDataSourceCSV",
+				"SalesDataSourceCSV sort(asc(ORDERNUMBER, true)) ~> SortByOrderNumber",
+				"DeleteColumns aggregate(groupBy(ORDERNUMBER),",
+				"     TotalSales = round(sum(SALES), 2),",
+				"          TotalQuantityOrdered = sum(QUANTITYORDERED),",
+				"          TotalNumberOfOrderLines = count(ORDERLINENUMBER)) ~> Aggregation",
+				"SortByOrderNumber derive(CONTACTPERSON = concat(CONTACTFIRSTNAME, ' ', CONTACTLASTNAME)) ~> ConcatContactName",
+				"ConcatContactName select(mapColumn(",
+				"          ORDERNUMBER,",
+				"          QUANTITYORDERED,",
+				"          PRICEEACH,",
+				"          ORDERLINENUMBER,",
+				"          SALES,",
+				"          ORDERDATE,",
+				"          DAYS_SINCE_LASTORDER,",
+				"          STATUS,",
+				"          PRODUCTLINE,",
+				"          MSRP,",
+				"          PRODUCTCODE,",
+				"          CUSTOMERNAME,",
+				"          PHONE,",
+				"          ADDRESSLINE1,",
+				"          CITY,",
+				"          POSTALCODE,",
+				"          COUNTRY,",
+				"          DEALSIZE,",
+				"          CONTACTPERSON",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> DeleteColumns"
+			]
+		}
+	}
+}
