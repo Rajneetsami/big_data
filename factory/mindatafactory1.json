@@ -1,0 +1,9 @@
+{
+	"name": "mindatafactory1",
+	"location": "swedencentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "66aa718f-9816-4b75-adab-c266b383381d",
+		"tenantId": "735058e3-0e46-46ce-a1d5-c0b0a68980db"
+	}
+}
